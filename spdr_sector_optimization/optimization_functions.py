@@ -29,6 +29,27 @@ import matplotlib.pyplot as plt
 from scipy.optimize import minimize, Bounds
 
 
+#%%  Dataset Conversions for Efficiency
+'''
+# (1) Sector Composition
+df = pd.read_csv('https://www.dropbox.com/scl/fi/p843qs28swgs1hj7l0q82/sectordecomp_ts-2025-04-05.csv?rlkey=dlm1l3pgj1ykzkb9vl19wrami&dl=1',
+                      encoding='latin-1')
+df.to_parquet('/Users/paulobermann/Dropbox/Black Leaf Capital/sectordecomp_ts - 2025-04-05.parquet')
+
+
+# (2) CRSP
+df = pd.read_stata('https://www.dropbox.com/scl/fi/0ftf894tuiou947bkbl3q/CRSP_A_STOCK_MONTHLY-2025-07-18.dta?rlkey=rtqoxs8a1shr56jsx26zqkduv&st=r989v1ew&dl=1')
+df.columns = [x.lower() for x in df.columns]
+df = df[['permno', 'date', 'ret', 'comnam']]
+df.to_parquet('/Users/paulobermann/Dropbox/Black Leaf Capital/data/CRSP_A_STOCK_MONTHLY - 2025-07-18.parquet')
+
+
+# (3) S&P 500 Returns
+df = pd.read_excel('https://www.dropbox.com/scl/fi/8trkmnqui833ljcanom6v/SP50_Prices.xlsx?rlkey=828jn3skfbo5hhr4i6jm9vnio&st=iknp9ewm&dl=1')
+df.to_parquet('/Users/paulobermann/Dropbox/Black Leaf Capital/data/SP50_Prices.parquet')
+'''
+
+
 #%%
 spdr_fund = 'XLP'
 training_sdate = '2015-01'  ## Format: YYYY-MM
@@ -51,8 +72,7 @@ optimization period,
 '''
 
 # Find permnos for requested sector
-sts = pd.read_csv('https://www.dropbox.com/scl/fi/p843qs28swgs1hj7l0q82/sectordecomp_ts-2025-04-05.csv?rlkey=dlm1l3pgj1ykzkb9vl19wrami&dl=1',
-                      encoding='latin-1')
+sts = pd.read_parquet('https://www.dropbox.com/scl/fi/bz47m6pt69ls2onhgr47p/sectordecomp_ts-2025-04-05.parquet?rlkey=lgwd4fnuczppwiybifkqbtmnt&dl=1')
 sts['date'] = pd.to_datetime(sts['datadate'])
 date = pd.to_datetime(training_sdate)  # Convert Date to DateTime object
 sub = sts.loc[sts['spdr_fund'] == spdr_fund, ].copy()  # only keep the wanted fund
@@ -77,10 +97,8 @@ printsub = sub[['datadate', 'index', 'spdr_fund', 'i', 'company']]
 print(printsub)
 
 
-
-
 #%%  Get the returns for the wanted permnos
-returndf = pd.read_stata('https://www.dropbox.com/scl/fi/0ftf894tuiou947bkbl3q/CRSP_A_STOCK_MONTHLY-2025-07-18.dta?rlkey=rtqoxs8a1shr56jsx26zqkduv&st=r989v1ew&dl=1')
+returndf = pd.read_parquet('https://www.dropbox.com/scl/fi/qgvkerj005ggzcam4ex1n/CRSP_A_STOCK_MONTHLY-2025-07-18.parquet?rlkey=qfvgr3pkssrrj8waiyunwjow0&dl=1')
 returndf.columns = [x.lower() for x in returndf.columns]
 returndf = returndf[['permno', 'date', 'ret', 'comnam']]
 returndf = returndf[returndf['permno'].isin(permnos)]
@@ -229,7 +247,7 @@ print(f'Optimal Portfolio Return (Training Period): {optportret:.2%}')
 
 
 # Calculate S&P 500 Performance for same period
-sp50 = pd.read_excel('https://www.dropbox.com/scl/fi/8trkmnqui833ljcanom6v/SP50_Prices.xlsx?rlkey=828jn3skfbo5hhr4i6jm9vnio&st=iknp9ewm&dl=1')
+sp50 = pd.read_parquet('https://www.dropbox.com/scl/fi/tw1rx9o4kmo48bqrvzqp0/SP50_Prices.parquet?rlkey=ulcrf1alt51uhrvuqo7dudbza&dl=1')
 sp50 = sp50[['Date', 'Price']].set_index('Date')
 sp50.sort_index(inplace=True)
 sp50['return'] = sp50.pct_change()
