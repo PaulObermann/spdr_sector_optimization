@@ -11,6 +11,38 @@ st.set_page_config(page_title="SPDR Optimal Portfolio Backtest", layout="wide")
 
 st.title("SPDR Sector Optimal Portfolio Backtesting")
 
+
+# Cache the datasets once on app load
+@st.cache_data
+def load_sector_decomp():
+    sts = pd.read_parquet('https://www.dropbox.com/scl/fi/bz47m6pt69ls2onhgr47p/sectordecomp_ts-2025-04-05.parquet?rlkey=lgwd4fnuczppwiybifkqbtmnt&dl=1')
+    sts['date'] = pd.to_datetime(sts['datadate'])
+    return sts
+
+@st.cache_data
+def load_returns():
+    returndf = pd.read_parquet('https://www.dropbox.com/scl/fi/qgvkerj005ggzcam4ex1n/CRSP_A_STOCK_MONTHLY-2025-07-18.parquet?rlkey=qfvgr3pkssrrj8waiyunwjow0&dl=1')
+    returndf.columns = [x.lower() for x in returndf.columns]
+    returndf = returndf[['permno', 'date', 'ret', 'comnam']]
+    returndf['month'] = returndf['date'].apply(lambda x: x.month)
+    returndf['year'] = returndf['date'].apply(lambda x: x.year)
+    return returndf
+
+@st.cache_data
+def load_sp500():
+    sp50 = pd.read_parquet('https://www.dropbox.com/scl/fi/tw1rx9o4kmo48bqrvzqp0/SP50_Prices.parquet?rlkey=ulcrf1alt51uhrvuqo7dudbza&dl=1')
+    sp50 = sp50[['Date', 'Price']].set_index('Date')
+    sp50.sort_index(inplace=True)
+    sp50['return'] = sp50.pct_change()
+    return sp50
+
+
+# Load all datasets once here
+sts = load_sector_decomp()
+returndf = load_returns()
+sp50 = load_sp500()
+
+
 # Sidebar Inputs
 with st.sidebar:
     st.header("Model Inputs")
@@ -39,15 +71,6 @@ with st.sidebar:
     run_button = st.button("Run Optimization")
 
 if run_button:
-
-    # Load sector decomposition
-    @st.cache_data
-    def load_sector_decomp():
-        sts = pd.read_parquet('https://www.dropbox.com/scl/fi/bz47m6pt69ls2onhgr47p/sectordecomp_ts-2025-04-05.parquet?rlkey=lgwd4fnuczppwiybifkqbtmnt&dl=1')
-        sts['date'] = pd.to_datetime(sts['datadate'])
-        return sts
-
-    sts = load_sector_decomp()
     date = pd.to_datetime(training_sdate)
     sub = sts.loc[sts['spdr_fund'] == spdr_fund, ].copy()
     sub['datediff'] = date - sub['date']
@@ -65,16 +88,6 @@ if run_button:
     permnos = sorted(set(sub['permno']))
 
     # Load return data
-    @st.cache_data
-    def load_returns():
-        returndf = pd.read_parquet('https://www.dropbox.com/scl/fi/qgvkerj005ggzcam4ex1n/CRSP_A_STOCK_MONTHLY-2025-07-18.parquet?rlkey=qfvgr3pkssrrj8waiyunwjow0&dl=1')
-        returndf.columns = [x.lower() for x in returndf.columns]
-        returndf = returndf[['permno', 'date', 'ret', 'comnam']]
-        returndf['month'] = returndf['date'].apply(lambda x: x.month)
-        returndf['year'] = returndf['date'].apply(lambda x: x.year)
-        return returndf
-
-    returndf = load_returns()
     returndf = returndf[returndf['permno'].isin(permnos)]
     returndf.dropna(subset=['ret'], inplace=True)
 
@@ -140,17 +153,6 @@ if run_button:
 
     portoptmoney, optportret = calc_perf(training_df, wopt, startmoney)
     testportmoney, testportreturn = calc_perf(testing_df, wopt, startmoney)
-
-    # Load S&P 500
-    @st.cache_data
-    def load_sp500():
-        sp50 = pd.read_parquet('https://www.dropbox.com/scl/fi/tw1rx9o4kmo48bqrvzqp0/SP50_Prices.parquet?rlkey=ulcrf1alt51uhrvuqo7dudbza&dl=1')
-        sp50 = sp50[['Date', 'Price']].set_index('Date')
-        sp50.sort_index(inplace=True)
-        sp50['return'] = sp50.pct_change()
-        return sp50
-
-    sp50 = load_sp500()
 
     def sp500_perf(sp50, sdate, edate):
         sp = sp50[sdate:edate].copy()
