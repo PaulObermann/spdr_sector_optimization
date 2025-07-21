@@ -53,15 +53,23 @@ df.to_parquet('/Users/paulobermann/Dropbox/Black Leaf Capital/data/SP50_Prices.p
 
 #%%
 spdr_fund = 'XLP'
-training_sdate = '2015-01'  ## Format: YYYY-MM
-training_edate = '2015-12'  ## Format: YYYY-MM
+training_sdate = '2021-01'  ## Format: YYYY-MM
+training_edate = '2021-12'  ## Format: YYYY-MM
 
-testing_sdate = '2016-01'  # Format: YYYY-MM
-testing_edate = '2016-12'  # Format: YYYY-MM
+testing_sdate = '2022-01'  # Format: YYYY-MM
+testing_edate = '2022-06'  # Format: YYYY-MM
 
 rf = 0.05  # Annual risk-free rate
 
 startmoney = 10000
+
+
+#%% Convert some inputs
+training_sdate = pd.Period(training_sdate, freq='M').start_time
+training_edate = pd.Period(training_edate, freq='M').end_time
+
+testing_sdate = pd.Period(testing_sdate, freq='M').start_time
+testing_edate = pd.Period(testing_edate, freq='M').end_time
 
 
 #%%
@@ -115,7 +123,7 @@ for perm in permnos:
 ### Subset to the training period ###
 training_df = returndf.loc[
     (returndf['date']>=pd.to_datetime(training_sdate))
-    & (returndf['date']<=pd.to_datetime(training_edate+'-31'))
+    & (returndf['date']<=pd.to_datetime(training_edate))
     ].copy()
 
 training_df.drop_duplicates(inplace=True)
@@ -132,7 +140,7 @@ invalid_permnos = counts.loc[counts['count']!=nmonths_required, 'permno']
 ### Subsetting to the testing period ###
 testing_df = returndf.loc[
     (returndf['date']>=pd.to_datetime(testing_sdate))
-    & (returndf['date']<=pd.to_datetime(testing_edate+'-31'))
+    & (returndf['date']<=pd.to_datetime(testing_edate))
     ].copy()
 
 testing_df.drop_duplicates(inplace=True)

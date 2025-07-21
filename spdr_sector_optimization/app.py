@@ -59,18 +59,24 @@ with st.sidebar:
          'XLU',
          'XLV',
          'XLY'],
-        index=6
+        index=0
     )
-    training_sdate = st.text_input("Training Start Date (YYYY-MM)", value="2015-01")
-    training_edate = st.text_input("Training End Date (YYYY-MM)", value="2015-12")
-    testing_sdate = st.text_input("Testing Start Date (YYYY-MM)", value="2016-01")
-    testing_edate = st.text_input("Testing End Date (YYYY-MM)", value="2016-12")
+    training_sdate = st.text_input("Training Start Date (YYYY-MM)", value="2020-01")
+    training_edate = st.text_input("Training End Date (YYYY-MM)", value="2020-12")
+    testing_sdate = st.text_input("Testing Start Date (YYYY-MM)", value="2021-01")
+    testing_edate = st.text_input("Testing End Date (YYYY-MM)", value="2021-12")
     rf = st.number_input("Annual Risk-Free Rate", value=0.05)
     startmoney = st.number_input("Starting Money", value=10000)
 
     run_button = st.button("Run Optimization")
 
 if run_button:
+    training_sdate = pd.Period(training_sdate, freq='M').start_time
+    training_edate = pd.Period(training_edate, freq='M').end_time
+
+    testing_sdate = pd.Period(testing_sdate, freq='M').start_time
+    testing_edate = pd.Period(testing_edate, freq='M').end_time
+
     date = pd.to_datetime(training_sdate)
     sub = sts.loc[sts['spdr_fund'] == spdr_fund, ].copy()
     sub['datediff'] = date - sub['date']
@@ -95,7 +101,7 @@ if run_button:
     def prepare_df(df, sdate, edate):
         df_sub = df.loc[
             (df['date'] >= pd.to_datetime(sdate)) &
-            (df['date'] <= pd.to_datetime(edate + '-31'))
+            (df['date'] <= pd.to_datetime(edate))
         ].copy()
         df_sub.drop_duplicates(inplace=True)
         nmonths = (pd.Period(edate, freq='M') - pd.Period(sdate, freq='M')).n + 1
