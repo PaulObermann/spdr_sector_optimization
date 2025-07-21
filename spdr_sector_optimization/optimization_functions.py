@@ -80,8 +80,7 @@ print(printsub)
 
 
 #%%  Get the returns for the wanted permnos
-
-returndf = pd.read_stata('/Users/paulobermann/Dropbox/Black Leaf Capital/data/CRSP_A_STOCK_MONTHLY - 2025-07-18.dta')
+returndf = pd.read_stata('https://www.dropbox.com/scl/fi/0ftf894tuiou947bkbl3q/CRSP_A_STOCK_MONTHLY-2025-07-18.dta?rlkey=rtqoxs8a1shr56jsx26zqkduv&st=r989v1ew&dl=1')
 returndf.columns = [x.lower() for x in returndf.columns]
 returndf = returndf[['permno', 'date', 'ret', 'comnam']]
 returndf = returndf[returndf['permno'].isin(permnos)]
