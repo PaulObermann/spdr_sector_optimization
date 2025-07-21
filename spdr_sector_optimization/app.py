@@ -144,7 +144,7 @@ if run_button:
     # Load S&P 500
     @st.cache_data
     def load_sp500():
-        sp50 = pd.read_excel('/Users/paulobermann/Dropbox/Black Leaf Capital/data/SP50_Prices.xlsx')
+        sp50 = pd.read_excel('https://www.dropbox.com/scl/fi/8trkmnqui833ljcanom6v/SP50_Prices.xlsx?rlkey=828jn3skfbo5hhr4i6jm9vnio&st=iknp9ewm&dl=1')
         sp50 = sp50[['Date', 'Price']].set_index('Date')
         sp50.sort_index(inplace=True)
         sp50['return'] = sp50.pct_change()
